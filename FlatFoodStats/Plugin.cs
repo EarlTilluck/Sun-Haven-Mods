@@ -5,6 +5,7 @@ using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using Wish;
@@ -27,6 +28,8 @@ namespace FlatFoodStats
         // BepInEx configurable values 
         public static ConfigEntry<bool> ConfigEnable;
         public static ConfigEntry<float> ConfigModifier;
+        public static ConfigEntry<int> ConfigHarvestMultiplier;
+        public static ConfigEntry<int> ConfigHarvestMultiplier2;
 
         // log
         public static ManualLogSource Log = BepInEx.Logging.Logger.CreateLogSource("Flat Food Stats");
@@ -43,14 +46,29 @@ namespace FlatFoodStats
 
             ConfigModifier = Config.Bind(
                 "General",              // Config section
-                "Modifier.",         // Config key
+                "Food Increase Modifier.",         // Config key
                 1f,                     // Default value
-                "Stat increase will be multiplied by this value. Use 0.5 for half, 2 for double etc."       // Description
+                "Food Stat increase will be multiplied by this value. Use 0.5 for half, 2 for double etc."       // Description
+            );
+
+            ConfigHarvestMultiplier = Config.Bind(
+                "Fertilizer",
+                "Earth or Magic Fertilizer Harvest Addition.",
+                1,
+                "Gain this number of additional crops when harvesting with specifed fertilizer"
+            );
+
+            ConfigHarvestMultiplier2 = Config.Bind(
+                "Fertilizer",
+                "Adv. Earth or Magic Fertilizer Harvest Addition.",
+                2,
+                "Gain this number of additional crops when harvesting with specifed fertilizer"
             );
 
             // on init, run patch all to patch our code into the game 
             harmony.PatchAll(typeof(Plugin));
             harmony.PatchAll(typeof(PatchFoodData));
+            harmony.PatchAll(typeof(PatchCrop));
 
             Log.LogInfo("Flat Food Stats Loaded.");
         }
@@ -114,5 +132,30 @@ namespace FlatFoodStats
             return runOriginalMethod;
         }
 
+    }
+
+    [Harmony]
+    class PatchCrop
+    {
+
+        // this method is used to calculate how many crops drop when harvested
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(Crop), "GetDropAmount")]
+        public static void Post_Crop_GetDropAmount(ref float __result, ref Crop __instance)
+        {
+            FertilizerType f = __instance.data.fertilizerType;
+            if (f == FertilizerType.Earth1 || f == FertilizerType.Magic1)
+            {
+                __result = __result + Plugin.ConfigHarvestMultiplier.Value;
+                return;
+            }
+
+            if (f == FertilizerType.Earth2 || f == FertilizerType.Magic2)
+            {
+                __result = __result + Plugin.ConfigHarvestMultiplier2.Value;
+                return;
+            }
+
+        }
     }
 }
