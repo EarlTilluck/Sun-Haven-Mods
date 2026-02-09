@@ -38,31 +38,31 @@ namespace FlatFoodStats
         {
             // init BepInEx configuration value
             ConfigEnable = Config.Bind(
-                "General",              // Config section
+                "01. Flat Food Stats",              // Config section
                 "Enable Flat Stat Increase.",         // Config key
                 true,                     // Default value
                 "Food will increase stats at a flat rate. Forever"       // Description
             );
 
             ConfigModifier = Config.Bind(
-                "General",              // Config section
-                "Food Increase Modifier.",         // Config key
+                "01. Flat Food Stats",              // Config section
+                "Food Increase Multiplier.",         // Config key
                 1f,                     // Default value
-                "Food Stat increase will be multiplied by this value. Use 0.5 for half, 2 for double etc."       // Description
+                "Use 0.5 for half, 2 for double etc."       // Description
             );
 
             ConfigHarvestMultiplier = Config.Bind(
-                "Fertilizer",
-                "Earth or Magic Fertilizer Harvest Addition.",
+                "02. Fertilizer",
+                "1. Earth or Magic Fertilizer Harvest Addition.",
                 1,
-                "Gain this number of additional crops when harvesting with specifed fertilizer"
+                "Gain this number of additional crops. Set to zero to disable"
             );
 
             ConfigHarvestMultiplier2 = Config.Bind(
-                "Fertilizer",
-                "Adv. Earth or Magic Fertilizer Harvest Addition.",
+                "02. Fertilizer",
+                "2. Adv. Earth or Magic Fertilizer Harvest Addition.",
                 2,
-                "Gain this number of additional crops when harvesting with specifed fertilizer"
+                "Gain this number of additional crops. Set to zero to disable"
             );
 
             // on init, run patch all to patch our code into the game 
