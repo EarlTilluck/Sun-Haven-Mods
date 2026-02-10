@@ -41,6 +41,11 @@ namespace FlatFoodStats
         public static ConfigEntry<float> ConfigFarmingExp;
         public static ConfigEntry<float> ConfigExplorationExp;
 
+        // fishing mini game
+        public static ConfigEntry<bool> ConfigEnableFishingMod;
+        public static ConfigEntry<float> ConfigFishSpeed;
+
+
         // log
         public static ManualLogSource Log = BepInEx.Logging.Logger.CreateLogSource("Flat Food Stats");
 
@@ -49,7 +54,7 @@ namespace FlatFoodStats
             // init BepInEx configuration value
             ConfigEnableFlatFood = Config.Bind(
                 "01. Flat Food Stats",              // Config section
-                "Enable Flat Stat Increase.",         // Config key
+                "Enable",         // Config key
                 true,                     // Default value
                 "Food will increase stats at a flat rate. Forever"       // Description
             );
@@ -64,14 +69,14 @@ namespace FlatFoodStats
             ConfigHarvestMultiplier = Config.Bind(
                 "02. Fertilizer",
                 "1. Earth or Magic Fertilizer Harvest Addition.",
-                1,
+                0,
                 "Gain this number of additional crops. Set to zero to disable"
             );
 
             ConfigHarvestMultiplier2 = Config.Bind(
                 "02. Fertilizer",
                 "2. Adv. Earth or Magic Fertilizer Harvest Addition.",
-                2,
+                0,
                 "Gain this number of additional crops. Set to zero to disable"
             );
 
@@ -110,118 +115,55 @@ namespace FlatFoodStats
                 "Experience is mulitiplied by this value"
             );
 
+            ConfigEnableFishingMod = Config.Bind(
+               "04. Fishing Mini Game",
+               "1. Enable",
+               true,
+               "Enable fixed speed for fishing minigame"
+           );
+
+            ConfigFishSpeed = Config.Bind(
+               "04. Fishing Mini Game",
+               "2. Speed (value should be between 0.1 - 1)",
+               0.5f,
+               "How fast should the bar move. 0.5 is default difficulty"
+           );
+
             // on init, run patch all to patch our code into the game 
             harmony.PatchAll(typeof(Plugin));
             harmony.PatchAll(typeof(PatchFoodData));
             harmony.PatchAll(typeof(PatchCrop));
             harmony.PatchAll(typeof(PatchPlayer));
+            harmony.PatchAll(typeof(PatchBobber));
 
             Log.LogInfo("Flat Food Stats Loaded.");
         }
 
     }
 
-    [Harmony]
-    class PatchFoodData
-    {
+    /**
+    
+    Flat Food Stats: Enable this to receive flat stat increases when eating food. 
+    The Multiplier value is used to increase stats faster if you want to. Every food eaten will give its base value for the stat increase multiplied by this value. 
+    For example: 0.5 will half the value and 2 will double it. Leave the value at 1 to use the base value as is.
+    The values will continue to increase at a flat rate regardless of how much you have eaten.
+    This applies to food you have already eaten as well.
+    
+    Fertilizer: Gain addition crops on fertilized plants.
+    This is an added bonus and not a multiplier, so setting the value to 1 will net you one additional crop to what you would normally get.
+    Likewise, setting the value to 2 will net you 2 additional crops.
+    Leave the values at zero if you don't want use this feature.
+    This applies to earth and magic fertilizers only, other fertilizers are not affected. 
 
-        // this method is used to calculate the value for a stat based all how much food 
-        // has been eaten so far (when the game loads, it uses this to find the current stat for player)
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(FoodData), nameof(FoodData.GetStat))]
-        public static bool Pre_Wish_GetStat(ref StatType statType, ref int numEaten,
-            ref StatIncrease statIncrease, ref float __result)
-        {
-            bool runOriginalMethod = !Plugin.ConfigEnableFlatFood.Value;
+    Experience Multiplier: Boost the value of experience gained for professions.
+    The experienced gained is multiplied by this value, so 0.5 will half value and 2 will double it.
+    Leave the values at 1 if you don't want to use this feature
 
-            if (statIncrease == StatIncrease.None)
-            {
-                __result = 0f;
-                return runOriginalMethod;
-            }
+    Fishing: Adjust the speed of the minigame slider:
+    The value should be between 0.1 and 1, 0.5 is the default. 
+    If a value is entered below 0.1 or above 1, the speed will be set to default 0.5
+    
 
-            float num = FoodData.GetStatIncreaseByNumEaten(statType, (int)statIncrease) * Plugin.ConfigFlatFoodModifier.Value;
-            num = num * numEaten;
-
-            if (GameSave.Farming.GetNode("Farming10b", true))
-            {
-                num = num * (1.05f + (float)GameSave.Farming.GetNodeAmount("Farming10b", 3, true) * 0.05f);
-            }
-            __result = num;
-            return runOriginalMethod;
-        }
-
-
-        // this method calculates how much value to add to a stat when a food is eaten.
-        // (this is used when the player eats a food.)
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(FoodData), nameof(FoodData.GetStatAddition))]
-        public static bool Pre_Wish_GetStatAddition(ref StatType statType, ref int numEaten,
-            ref StatIncrease statIncrease, ref float __result)
-        {
-            bool runOriginalMethod = !Plugin.ConfigEnableFlatFood.Value;
-
-            if (statIncrease == StatIncrease.None)
-            {
-                __result = 0f;
-                return runOriginalMethod;
-            }
-
-            float num = FoodData.GetStatIncreaseByNumEaten(statType, (int)statIncrease) * Plugin.ConfigFlatFoodModifier.Value;
-
-            if (GameSave.Farming.GetNode("Farming10b", true))
-            {
-                num = num * (1.05f + (float)GameSave.Farming.GetNodeAmount("Farming10b", 3, true) * 0.05f);
-            }
-
-            __result = num;
-            return runOriginalMethod;
-        }
-
-    }
-
-    [Harmony]
-    class PatchCrop
-    {
-
-        // this method is used to calculate how many crops drop when harvested
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(Crop), "GetDropAmount")]
-        public static void Post_Crop_GetDropAmount(ref float __result, ref Crop __instance)
-        {
-            FertilizerType f = __instance.data.fertilizerType;
-            if (f == FertilizerType.Earth1 || f == FertilizerType.Magic1)
-            {
-                __result = __result + Plugin.ConfigHarvestMultiplier.Value;
-                return;
-            }
-
-            if (f == FertilizerType.Earth2 || f == FertilizerType.Magic2)
-            {
-                __result = __result + Plugin.ConfigHarvestMultiplier2.Value;
-                return;
-            }
-
-        }
-    }
-
-    [Harmony]
-    class PatchPlayer
-    {
-        // this method adds experience to the player
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(Player), nameof(Player.AddEXP))]
-        public static void Pre_Player_AddEXP(ref ProfessionType profession, ref float amount)
-        {
-            switch (profession)
-            {
-                case ProfessionType.Exploration: amount *= Plugin.ConfigExplorationExp.Value; break;
-                case ProfessionType.Farming: amount *= Plugin.ConfigFarmingExp.Value; break;
-                case ProfessionType.Mining: amount *= Plugin.ConfigMiningExp.Value; break;
-                case ProfessionType.Combat: amount *= Plugin.ConfigCombatExp.Value; break;
-                case ProfessionType.Fishing: amount *= Plugin.ConfigFishingExp.Value; break;
-            }
-        }
-    }
+    */
 
 }

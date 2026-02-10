@@ -65,6 +65,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PatchBobber.cs" />
+    <Compile Include="PatchCrop.cs" />
+    <Compile Include="PatchFoodData.cs" />
+    <Compile Include="PatchPlayer.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
