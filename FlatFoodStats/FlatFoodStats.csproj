@@ -43,6 +43,10 @@
       <HintPath>..\..\..\..\Games\Sun Haven\game\BepInEx\core\BepInEx.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Mirror">
+      <HintPath>..\..\..\..\Games\Sun Haven\game\Sun Haven_Data\Managed\Mirror.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="SunHaven.Core">
       <HintPath>..\..\..\..\Games\Sun Haven\game\Sun Haven_Data\Managed\SunHaven.Core.dll</HintPath>
       <Private>False</Private>
@@ -65,10 +69,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Options.cs" />
     <Compile Include="PatchBobber.cs" />
     <Compile Include="PatchCrop.cs" />
     <Compile Include="PatchFoodData.cs" />
     <Compile Include="PatchPlayer.cs" />
+    <Compile Include="PatchTree.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -19,23 +19,35 @@ namespace FlatFoodStats
         public static bool Pre_Wish_GetStat(ref StatType statType, ref int numEaten,
             ref StatIncrease statIncrease, ref float __result)
         {
-            bool runOriginalMethod = !Plugin.ConfigEnableFlatFood.Value;
+            bool enabled = Options.EnableFlatFood.Value;
+
+            if (!enabled) return true; // return true to run the original method instead
 
             if (statIncrease == StatIncrease.None)
             {
                 __result = 0f;
-                return runOriginalMethod;
             }
-
-            float num = FoodData.GetStatIncreaseByNumEaten(statType, (int)statIncrease) * Plugin.ConfigFlatFoodModifier.Value;
-            num = num * numEaten;
-
-            if (GameSave.Farming.GetNode("Farming10b", true))
+            else
             {
-                num = num * (1.05f + (float)GameSave.Farming.GetNodeAmount("Farming10b", 3, true) * 0.05f);
+                float num = FoodData.GetStatIncreaseByNumEaten(statType, (int)statIncrease);
+
+                if (Options.EnableFlatFoodBoost.Value == true)
+                {
+                    float multiplier = Options.FlatFoodBoost.Value;
+                    if (multiplier > 0) num *= multiplier;
+                }
+
+                num *= numEaten;
+
+                if (GameSave.Farming.GetNode("Farming10b", true))
+                {
+                    num *= (1.05f + (float)GameSave.Farming.GetNodeAmount("Farming10b", 3, true) * 0.05f);
+                }
+
+                __result = num;
             }
-            __result = num;
-            return runOriginalMethod;
+
+            return false; // skip original method
         }
 
 
@@ -46,23 +58,34 @@ namespace FlatFoodStats
         public static bool Pre_Wish_GetStatAddition(ref StatType statType, ref int numEaten,
             ref StatIncrease statIncrease, ref float __result)
         {
-            bool runOriginalMethod = !Plugin.ConfigEnableFlatFood.Value;
+            bool enabled = Options.EnableFlatFood.Value;
+
+            if (!enabled) return true; // return true to run the original method instead
 
             if (statIncrease == StatIncrease.None)
             {
                 __result = 0f;
-                return runOriginalMethod;
             }
-
-            float num = FoodData.GetStatIncreaseByNumEaten(statType, (int)statIncrease) * Plugin.ConfigFlatFoodModifier.Value;
-
-            if (GameSave.Farming.GetNode("Farming10b", true))
+            else
             {
-                num = num * (1.05f + (float)GameSave.Farming.GetNodeAmount("Farming10b", 3, true) * 0.05f);
+                float num = FoodData.GetStatIncreaseByNumEaten(statType, (int)statIncrease);
+
+                if (Options.EnableFlatFoodBoost.Value == true)
+                {
+                    float multiplier = Options.FlatFoodBoost.Value;
+                    if (multiplier > 0) num *= multiplier;
+                }
+
+
+                if (GameSave.Farming.GetNode("Farming10b", true))
+                {
+                    num *= (1.05f + (float)GameSave.Farming.GetNodeAmount("Farming10b", 3, true) * 0.05f);
+                }
+
+                __result = num;
             }
 
-            __result = num;
-            return runOriginalMethod;
+            return false; // skip original method
         }
 
     }

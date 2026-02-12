@@ -18,16 +18,15 @@ namespace FlatFoodStats
         [HarmonyPatch(typeof(Bobber), nameof(Bobber.StartMiniGame), new Type[] { typeof(FishData) })]
         public static void Pre_Bobber_StartMiniGame(ref FishData fishData)
         {
-            if (Plugin.ConfigEnableFishingMod.Value == false) { return; }
+            if (Options.EnableFishingGame.Value == false) return; // skip if not enabled
 
-            if (fishData == null) { return; }
-            if (fishData.fishingMinigame == null) { return; }
-            if (fishData.fishingMinigame.Count == 0) { return; }
+            if (fishData == null) return;
+            if (fishData.fishingMinigame == null) return;
+            if (fishData.fishingMinigame.Count == 0) return;
 
             foreach (FishingMiniGame fmg in fishData.fishingMinigame)
             {
-                Plugin.Log.LogWarning("doing a speed mod");
-                float speed = Plugin.ConfigFishSpeed.Value;
+                float speed = Options.FishingSliderSpeed.Value;
                 if (speed <= 0) speed = 0.5f;
                 if (speed > 1) speed = 0.5f;
                 fmg.barMovementSpeed = speed;
